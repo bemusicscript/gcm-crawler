@@ -1,18 +1,21 @@
 """
 crawler.py
-
 Crawler for the Rhythm Game
 """
+import os
 import re
 import requests
-from config import USERNAME, PASSWORD
+from dotenv import load_dotenv
+
+# load envvars
+load_dotenv()
+SEGA_USERNAME = os.getenv("SEGA_USERNAME")
+SEGA_PASSWORD = os.getenv("SEGA_PASSWORD")
 
 def get_maimai_data(username, password, user_idx=0):
     """ (str, str, str) -> dict
-
     Crawl maimai data from the official website.
     Note: JP version
-
     >>> get_maimai_data("stypr", "password")
     """
     host = "https://maimaidx.jp/maimai-mobile"
@@ -57,14 +60,14 @@ def get_maimai_data(username, password, user_idx=0):
         response.text
     )
     user_rating = re.findall(
-        '<div class="rating_block .+">(.+)</div>',
+        '<div class="rating_block(.+)?">(.+)</div>',
         response.text
     )
 
     result["info"] = {
         "title": user_title[0],
         "nickname": user_nickname[0].strip(),
-        "current_rating": int(user_rating[0]),
+        "current_rating": int(user_rating[0][1]),
         "extra": user_extra
     }
 
@@ -98,7 +101,6 @@ def get_maimai_data(username, password, user_idx=0):
             _log
         )
         # need to implement fc, etc.
-        print(_log_title)
         result["log"].append(
             {
                 "date": _log_date[0].strip(),
@@ -115,9 +117,7 @@ def get_maimai_data(username, password, user_idx=0):
 
 def get_chunithm_data(username, password, user_idx=0):
     """ (str, str, str) -> dict
-
     Crawl chunithm data from the official website.
-
     >>> get_chunithm_data("stypr", "password")
     """
     host = "https://chunithm-net.com/mobile"
@@ -242,9 +242,7 @@ def get_chunithm_data(username, password, user_idx=0):
 
 def get_ongeki_data(username, password, user_idx=0):
     """ (str, str, str) -> dict
-
     Crawl ongeki data from the official website.
-
     >>> get_ongeki_data("stypr", "password")
     """
     host = "https://ongeki-net.com/ongeki-mobile"
@@ -361,9 +359,16 @@ def get_ongeki_data(username, password, user_idx=0):
 
     return result
 
+def collect_data():
+    """ collect data """
+    result = {}
+    result['ongeki'] = get_ongeki_data(SEGA_USERNAME, SEGA_PASSWORD)
+    result['chunithm'] = get_chunithm_data(SEGA_USERNAME, SEGA_PASSWORD)
+    result['maimai'] = get_maimai_data(SEGA_USERNAME, SEGA_PASSWORD)
+    return result
 
 if __name__ == "__main__":
-    assert USERNAME and PASSWORD
-    print(get_ongeki_data(USERNAME, PASSWORD))
-    print(get_chunithm_data(USERNAME, PASSWORD))
-    print(get_maimai_data(USERNAME, PASSWORD))
+    assert SEGA_USERNAME and SEGA_PASSWORD
+    print(get_ongeki_data(SEGA_USERNAME, SEGA_PASSWORD))
+    print(get_chunithm_data(SEGA_USERNAME, SEGA_PASSWORD))
+    print(get_maimai_data(SEGA_USERNAME, SEGA_PASSWORD))
